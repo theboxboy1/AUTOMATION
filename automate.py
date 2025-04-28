@@ -42,10 +42,8 @@ else:
 # Go to extraction site
 driver.get("https://app.covidence.org/reviews/446621/extraction/index")
 
-# Wait for the page to load
-WebDriverWait(driver, 30).until(
-    EC.presence_of_element_located((By.TAG_NAME, "body"))
-)
+
+
 
 # Function to check if "Begin extraction" link exists
 def find_begin_extraction_link():
@@ -111,14 +109,14 @@ for attempt in range(max_attempts):
     if not load_more_button:
         # Scroll down to try to reveal the button
         driver.execute_script("window.scrollBy(0, 500);")
-        time.sleep(1)
+        time.sleep(100/1000)
         load_more_button = find_load_more_button()
 
     if load_more_button:
         try:
             # Scroll to the button to make sure it's in view
             driver.execute_script("arguments[0].scrollIntoView(true);", load_more_button)
-            time.sleep(1)
+            time.sleep(800/1000)
             load_more_button.click()
         except StaleElementReferenceException:
             continue
@@ -133,8 +131,8 @@ for attempt in range(max_attempts):
         # Could not find 'Load more' button even after scrolling
         pass
 
-    # Wait for content to load
-    time.sleep(3)
+   
+    
 
 # If we found the link, click it
 if found_link:
@@ -149,11 +147,11 @@ if found_link:
 
 # Wait for input box and enter data
 try:
-    input_element = WebDriverWait(driver, 15).until(
+    input_element = WebDriverWait(driver, 5).until(
         EC.presence_of_element_located((By.CLASS_NAME, "webpack-concepts-Extraction-Blocks-shared-BlockWidgets-module__Input"))
     )
     input_element.clear()
-    input_element.send_keys("SAWAF IS AN ORPHAN" + Keys.ENTER)
+    input_element.send_keys("tech boy" + Keys.ENTER)
 except TimeoutException:
     pass
 except Exception:
