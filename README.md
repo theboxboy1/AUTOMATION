@@ -1,4 +1,20 @@
-# Steps to use
+
+# Setup
+
+1. Go to: https://googlechromelabs.github.io/chrome-for-testing/
+2. Install latest stable version of "chromedriver" by pasting link in browser
+
+  For Intel-based macs: https://storage.googleapis.com/chrome-for-testing-public/135.0.7049.114/mac-x64/chromedriver-mac-x64.zip
+
+  For Arm-based macs (M-series chip: M1, M2 or M3 chip): https://storage.googleapis.com/chrome-for-testing-public/135.0.7049.114/mac-arm64/chromedriver-mac-arm64.zip
+
+  For Windows 64-bit: https://storage.googleapis.com/chrome-for-testing-public/135.0.7049.114/win64/chromedriver-win64.zip
+
+  For Linux: https://storage.googleapis.com/chrome-for-testing-public/135.0.7049.114/linux64/chromedriver-linux64.zip
+
+3. Unzip file and move "chromedriver.exe" file into Python file where you will keep the automation code
+
+# Steps to use 
 
 1. Open any IDE of your choosing (Microsoft VS code and Pycharm are good)
 2. Go to terminal and input: `pip install selenium`(only need to do this once to install necessary libraries)
