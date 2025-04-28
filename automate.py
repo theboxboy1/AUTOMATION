@@ -153,7 +153,7 @@ try:
         EC.presence_of_element_located((By.CLASS_NAME, "webpack-concepts-Extraction-Blocks-shared-BlockWidgets-module__Input"))
     )
     input_element.clear()
-    input_element.send_keys("tech boy" + Keys.ENTER)
+    input_element.send_keys("SAWAF IS AN ORPHAN" + Keys.ENTER)
 except TimeoutException:
     pass
 except Exception:
