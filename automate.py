@@ -9,6 +9,12 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, TimeoutException, ElementClickInterceptedException, StaleElementReferenceException
+from google import genai
+import pathlib
+import httpx
+import ast
+
+
 
 # Setup
 service = Service(executable_path="chromedriver.exe")
@@ -40,7 +46,7 @@ else:
     print("Cookies saved.")
 
 # Go to extraction site
-driver.get("https://app.covidence.org/reviews/446621/extraction/index")
+driver.get("https://app.covidence.org/reviews/446621/extraction/index?filter%5Bstatus%5D=NOT_STARTED")
 
 
 
@@ -137,27 +143,156 @@ for attempt in range(max_attempts):
 # If we found the link, click it
 if found_link:
     try:
-        link.click()
-    except Exception:
-        # Try JavaScript click
+        # Find the nearest parent element with an <h2> inside it
+        container = link.find_element(By.XPATH, "./ancestor::*[.//h2][1]")
+        h2 = container.find_element(By.TAG_NAME, "h2")
+        title_text = h2.text  #title of article 
+        
+        link.click()  # Click the link
+    except Exception as e:
+        print(f"Error extracting title or clicking link: {e}")
+        # Fallback: Try JavaScript click
         try:
             driver.execute_script("arguments[0].click();", link)
-        except Exception:
-            pass
+        except Exception as js_error:
+            print(f"JS click also failed: {js_error}")
+
+# ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+client = genai.Client(api_key="AIzaSyCxLT5bA00Lsf3C_UKcxbeIHuM8SStN2tM")
+
+
+
+
+print(f"TITLE OF ARTICLE: {title_text}")
+article = input("Enter link or PDF file path: ")
+
+if article.lower().endswith("pdf"):
+    filepath = pathlib.Path('file.pdf')
+    filepath.write_bytes(httpx.get(article).content)
+else:
+    pass
+
+
+prompt = f'''
+
+
+You will be given a link or pdf file path, answer all these questions in the same format everytime (python dictionary format to be easy scraped with code)
+
+question 2: Last name first initial (e.g., Harry T) 
+
+question 3: Research objective: List the research objective(s) from the abstract verbatim in this cell, starting with the verb. Do not start with a preposition (‘to’). 
+
+question 4: Canada only or multiple countries including Canada? (return true or false bool)
+
+question 5: If you selected multiple countries including Canada above (i.e if false bool), make a list of all the other countries for ex. ["australia", "Germany", "Canada"]
+
+question 6: Indicate the province(s)/territor(ies) if available: (just list the available provinces seperated by commas in a list for ex. ["australia", "Germany", "Canada"]) Alberta British Columbia Manitoba New Brunswick Newfoundland and Labrador Northwest Territories Nova Scotia Nunavut Ontario Prince Edward Island Quebec Saskatchewan Yukon Not reported 
+
+question 7: Abstract: Search the article on Google and copy and paste the abstract verbatim here. 
+
+question 8: list all concepts mentioned in the abstract only from these options: experience, patient reported experience measures (PREMs), engagement, preference, perspective (or beliefs, views, attitudes), communication, decision-making, patient satisfaction, patient barriers ,patient reported outcome measures (PROMs), quality of life , Other, if Other: list the other ones
+
+
+question 9: Identify the medical specialt(ies) or if it is a condition, identify the specialty most related to the condition from the list below. This should be easily identifiable from the abstract. Allergy and immunology, Anesthesiology ,Cardiology, Dermatology, Emergency medicine ,Endocrinology ,Family medicine/primary care ,Gastroenterology ,Geriatrics,Hematology, Infectious disease ,Medical genetics,Nephrology ,Neurology, Obstetrics and Gynecology (OB/GYN), Oncology, Opthalmology ,Otolaryngology (ENT-ear, nose, throat), Palliative/end-of-life care ,Pathology, Pediatrics, Physical medicine and rehabilitation, Psychiatry ,Pulmonology, Radiology, Rheumatology, Other, (if other, list the other ones/one) 
+
+
+ALL LISTS SHOULD BE IN THE STANDARD PYTHON LIST FORMAT: ["hey", "hi", "bye"]  NOT ["hey"], ["hi"], ["bye"]
+{article}
+'''
+
+response = client.models.generate_content(
+    model="gemini-2.0-flash", contents=prompt
+)
+
+
+
+data = response.text.replace("```python", "").replace("```", "")
+
+
+
+data_dict = ast.literal_eval(data)
+
+with open("output.txt", "w", encoding="utf-8") as file:
+    file.write(data)
+
+
 
 # Wait for input box and enter data
+# Wait for input box and enter data
 try:
-    input_element = WebDriverWait(driver, 5).until(
+    input_element_1 = WebDriverWait(driver, 5).until(
         EC.presence_of_element_located((By.CLASS_NAME, "webpack-concepts-Extraction-Blocks-shared-BlockWidgets-module__Input"))
     )
-    input_element.clear()
-    input_element.send_keys("tech boy" + Keys.ENTER)
+    
+    input_element_1.send_keys(title_text + Keys.ENTER)
+    
+    input_element_2 = driver.find_element(By.ID, "fea98d66-7f3a-4974-9658-bf4d55b391e6")
+    input_element_2.send_keys(data_dict["question 2"] + Keys.ENTER)
+
+    input_element_3 = driver.find_element(By.ID, "44e7db4f-d0c5-4673-bc12-c34b07926560")
+    input_element_3.send_keys(data_dict["question 3"] + Keys.ENTER)
+
+    input_element_4a = driver.find_element(By.XPATH, "//span[text()='Canada only']")
+    input_element_4b = driver.find_element(By.XPATH, "//span[text()='Multiple countries including Canada']")
+
+    if data_dict["question 4"] == True:
+        input_element_4a.click()
+    else:
+        input_element_4b.click()
+        input_element_5 = driver.find_element(By.ID, "819348b8-f7c3-4f94-bd6a-aff6bc073ad4")
+        
+        input_element_5.send_keys(data_dict["question 5"] + Keys.ENTER)
+
+    
+    
+    provinces = data_dict["question 6"]
+
+    
+    
+    for province in provinces:
+        input_element_6 = driver.find_element(
+        By.XPATH,
+        f'//span[@class="webpack-concepts-Extraction-Blocks-Checkboxes-BaseCheckboxes-module__optionLabelText" and text()="{province}"]'
+    )
+        input_element_6.click()
+    
+    
+    input_element_7 = driver.find_element(By.ID, "2f459861-31e5-4bfc-a0df-fa72540df611")
+        
+    input_element_7.send_keys(data_dict["question 7"] + Keys.ENTER)
+    
+    
+    concepts = data_dict["question 8"]
+    for concept in concepts:
+        input_element_8 = driver.find_element(
+        By.XPATH,
+        f'//span[@class="webpack-concepts-Extraction-Blocks-Checkboxes-BaseCheckboxes-module__optionLabelText" and text()="{concept}"]'
+    )
+        input_element_8.click()
+        
+    
+    specialities = data_dict["question 9"]
+    for speciality in specialities:
+        input_element_9 = driver.find_element(
+        By.XPATH,
+        f'//span[@class="webpack-concepts-Extraction-Blocks-Checkboxes-BaseCheckboxes-module__optionLabelText" and text()="{speciality}"]'
+    )
+        input_element_9.click()
+    
+    
+
+
+    
+
 except TimeoutException:
     pass
-except Exception:
-    pass
+except Exception as e:
+    print(f"Error: {str(e)}")
 
 # script completed 
-time.sleep(60)
+
 print("SCRIPT COMPLETE... CLOSING IN 60 SEC")
+
+time.sleep(300)
 driver.quit()
