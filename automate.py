@@ -37,7 +37,7 @@ else:
     print("Please log in manually in the browser window...")  # Let user manually login to save cookies
     # Give user time to login manually
     WebDriverWait(driver, 120).until(
-        EC.presence_of_element_located((By.CLASS_NAME, "webpack-concepts-Extraction-Blocks-shared-BlockWidgets-module__Input"))  # Wait for login to be detected by checking for input field
+        EC.presence_of_element_located((By.CLASS_NAME, "organization__members--title")) 
     )
     print("Login detected. Saving cookies...")
     cookies = driver.get_cookies()
