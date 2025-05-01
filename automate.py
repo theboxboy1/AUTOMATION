@@ -159,7 +159,7 @@ if found_link:
 
 # ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-client = genai.Client(api_key="AIzaSyCxLT5bA00Lsf3C_UKcxbeIHuM8SStN2tM")
+client = genai.Client(api_key="SHHHHHHH")
 
 
 
@@ -294,5 +294,5 @@ except Exception as e:
 
 print("SCRIPT COMPLETE... CLOSING IN 60 SEC")
 
-time.sleep(300)
+time.sleep(60)
 driver.quit()
